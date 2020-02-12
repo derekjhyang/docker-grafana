@@ -1,0 +1,36 @@
+---
+#- debug:
+#    msg: "xxxxxxx {{ ansible_user_id }}"
+
+- name: ensure prometheus config directory exist
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  with_items:
+    - "alertmanager"
+    - "prometheus"
+  when:
+    - inventory_hostname in groups['prometheus']
+
+- name: Copying over alert rules
+  become: true
+  template:
+    src: "alert.rules.j2"
+    dest: "{{ node_config_directory }}/alertmanager/config.yml"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  when: 
+    - inventory_hostname in groups['prometheus']
+
+- name: Copying over prometheus config file
+  become: true
+  template:
+    src: "prometheus.yml.j2"
+    dest: "{{ node_config_directory }}/prometheus/prometheus.yml"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  when: 
+    - inventory_hostname in groups['prometheus']

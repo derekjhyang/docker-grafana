@@ -1,0 +1,44 @@
+- name: Precheck inventory hosts
+  become: yes
+  gather_facts: false
+  hosts: all
+  tasks:
+      - name: Install the required apt packages
+        apt:
+          name: "{{ item }}"
+          update_cache: yes
+        with_items:
+          - python-pip
+          - python-dev
+          - python-setuptools
+
+      - name: Install pip packages
+        pip:
+          name: "{{ item }}"
+        with_items:
+          - docker
+  tags: prom_target
+
+- name: Apply role monitor server
+  hosts:
+    - prometheus
+    - prometheus-alertmanager
+    - grafana
+    - consul
+    - consul-registrator
+  roles:
+    - prometheus
+    - grafana
+    - consul
+  tags: prom_server
+
+- name: Apply role monitor target
+  hosts:
+    - cadvisor
+    - prometheus-node-exporter
+    - prometheus-ipmi-exporter
+  roles:
+    - prometheus
+  #tags: prom_target
+
+

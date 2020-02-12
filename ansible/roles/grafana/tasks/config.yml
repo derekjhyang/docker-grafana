@@ -1,0 +1,46 @@
+---
+- name: ensure grafana config directory exist
+  become: true
+  file:
+    path: "{{ node_config_directory }}/{{ item }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  with_items:
+    - "grafana"
+    - "grafana/provisioning"
+    - "grafana/provisioning/datasources"
+    - "grafana/provisioning/dashboards"
+ 
+- name: Copying over prometheus config file
+  become: true
+  template:
+    src: "grafana.config.j2"
+    dest: "{{ node_config_directory }}/grafana/grafana.config"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+
+- name: Copying over grafana datasource config file
+  become: true
+  template:
+    src: "datasource.yml.j2"
+    dest: "{{ node_config_directory }}/grafana/provisioning/datasources/datasource.yml"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+
+- name: Copying over grafana dashboard config file
+  become: true
+  template:
+    src: "dashboard.yml.j2"
+    dest: "{{ node_config_directory }}/grafana/provisioning/dashboards/dashboard.yml"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+
+- name: Copy grafana dashboards
+  become: true
+  copy:
+    src: "{{ playbook_dir }}/roles/grafana/files/" 
+    dest: "{{ node_config_directory }}/grafana/provisioning/dashboards"
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    directory_mode: yes

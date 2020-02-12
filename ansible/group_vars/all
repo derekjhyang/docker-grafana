@@ -1,0 +1,20 @@
+
+#enable_cadvisor: true
+#enable_grafana: true
+#enable_prometheus: true
+
+
+node_config_directory: "/home/derekjhyang/ansi_prom"
+
+grafana_dashboard_pass: "admin"
+
+
+cadvisor_port: 18080
+grafana_port: 3000
+prometheus_port: 9090
+prometheus_alertmanager_port: 9093
+prometheus_node_exporter_port: 9100
+prometheus_ipmi_exporter_port: 9289
+
+
+

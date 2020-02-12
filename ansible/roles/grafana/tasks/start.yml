@@ -1,0 +1,21 @@
+---
+- name: Start grafana container
+  become: true
+  vars:
+    service_name: "grafana"
+  docker_container:
+    name: "{{ service_name }}"
+    image: grafana/grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - "{{ node_config_directory }}/grafana/provisioning/:/etc/grafana/provisioning/"
+    #env_file:
+    #  - "{{ node_config_directory }}/grafana/grafana.config"
+    env:
+        GF_SECURITY_ADMIN_PASSWORD={{ grafana_dashboard_pass }}
+        GF_USERS_ALLOW_SIGN_UP=false
+    published_ports:
+      - "{{ grafana_port }}:3000"
+    restart_policy: always
+
+

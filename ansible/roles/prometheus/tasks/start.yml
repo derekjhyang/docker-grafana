@@ -1,0 +1,83 @@
+
+- name: Start prometheus-server container
+  become: true
+  vars:
+    service_name: "prometheus-server"
+  docker_container:
+    name: "{{ service_name }}"
+    image: prom/prometheus:v2.1.0
+    volumes:
+      - "{{ node_config_directory }}/prometheus/:/etc/prometheus/"
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    published_ports:
+      - "{{ prometheus_port }}:9090"
+    restart_policy: always
+  when:
+    - inventory_hostname in groups['prometheus']
+
+- name: Start alertmanager container
+  become: true
+  vars:
+    service_name: "prometheus-alertmanager"
+  docker_container:
+    name: "{{ service_name }}"
+    image: prom/alertmanager
+    volumes:
+      - "{{ node_config_directory }}/alertmanager/:/etc/alertmanager/"
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    published_ports:
+      - "{{ prometheus_alertmanager_port }}:9093"
+    restart_policy: always
+  when:
+    - inventory_hostname in groups['prometheus']
+
+
+- name: Start cadvisor container
+  become: true
+  vars:
+    service_name: "cadvisor"
+  docker_container:
+    name: "{{ service_name }}"
+    image: google/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    published_ports:
+      - "{{ cadvisor_port }}:8080"
+    restart_policy: always
+  when:
+    - inventory_hostname in groups['cadvisor']
+
+
+- name: Start node-exporter container
+  become: true
+  vars:
+    service_name: "prometheus-node-exporter"
+  docker_container:
+    name: "{{ service_name }}"
+    image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    published_ports:
+      - "{{ prometheus_node_exporter_port }}:9100"
+    restart_policy: always
+  when:
+    - inventory_hostname in groups['prometheus-node-exporter']
+
+

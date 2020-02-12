@@ -1,0 +1,33 @@
+---
+
+- name: Start consul-server container
+  become: true
+  vars:
+    service_name: "consul-server"
+  docker_container:
+    name: "{{ service_name }}"
+    image: consul
+    command:
+      - 'agent -server -client=0.0.0.0 -dev -node=node0 -data-dir=/tmp/consul'
+    published_ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53/udp"
+    restart_policy: always
+  when:
+    - inventory_hostname in groups['consul']
+
+- name: Start registrator
+  become: true
+  vars:
+    service_name: "consul-registrator"
+    consul_server: "{{ hostvars[groups['consul'][0]]['ansible_' + hostvars[groups['consul'][0]]['mgmt_interface']]['ipv4']['address'] }}"
+  docker_container:
+    name: "{{ service_name }}"
+    image: "gliderlabs/registrator"
+    volumes:
+      - /var/run:/tmp:rw
+    command: "consul://{{ consul_server }}:8500"
+    restart_policy: always
+  when:
+    - inventory_hostname in groups['consul-registrator']
